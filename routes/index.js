@@ -21,12 +21,12 @@ router.get('/', function(req, res, next) {
 
 
 router.get('/:city', function(req, res, next) {
-  var city = req.params.city;
+  var city = encodeURI(req.params.city);
   console.log(city);
   axios.get('https://api.openaq.org/v1/latest?city='+city)
   .then(function (response) {
     // handle success
-    res.render('city', {results:response.data.results, city: city});
+    res.render('city', {results:response.data.results, city: decodeURI(city)});
     //console.log(response.data);
   })
   .catch(function (error) {
