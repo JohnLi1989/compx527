@@ -1,0 +1,42 @@
+<div>
+    <span>Choose a country</span>
+    <select id="selCountry">
+        <option style='display: none'></option>
+        <option v-for value ="<%=item.code%>"><%=item.name%></option>
+    </select>
+    <span>Choose a city</span>
+
+    <select id="selCity">
+    </select>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+<script>
+    $('#selCountry').change(function () {
+        var country = $(this).find('option:selected').val();
+        $("#selCity").empty();
+        axios.get('https://api.openaq.org/v1/cities?country='+country)
+            .then(function (response) {
+                // handle success
+                for(let i of response.data.results){
+                    $("#selCity").append("<option style='display: none'></option>");
+                    $("#selCity").append("<option>"+i.city+"</option>");
+                }
+            })
+            .catch(function (error) {
+                // handle error
+                console.log(error);
+        });
+     });
+
+    $('#selCity').change(function () {
+        var city = $(this).find('option:selected').val();
+        window.location.href='/'+ city;
+    });
+    
+    
+</script>
