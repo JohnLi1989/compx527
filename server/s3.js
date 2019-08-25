@@ -52,7 +52,7 @@ var AWS = require("aws-sdk");
 
 AWS.config.update({
   region: "us-west-1",
-  endpoint: "http://localhost:3000"
+  endpoint: "https://dynamodb.us-east-1.amazonaws.com"
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
