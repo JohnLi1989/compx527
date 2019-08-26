@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const AWS = require("aws-sdk");
+const moment = require("moment");
 
 AWS.config.update({
   region: "us-east-1",
@@ -41,25 +42,49 @@ router.get('/city', function(req, res, next) {
   });
 });
 
+router.get('/location', function(req, res, next) {
+  city = encodeURI(req.query.city)
+  axios.get('https://api.openaq.org/v1/locations?city='+city)
+  .then(function (response) {
+    // handle success
+    res.json({locations:response.data.results});
+    //console.log(response.data);
+  })
+  .catch(function (error) {
+    // handle error
+    console.log(error);
+  });
+});
+
 
 router.get('/detail', function(req, res, next) {
-  //var city = encodeURI(req.query.city);
-  var city = "Central & Western"
+  var location = req.query.location;
+  var hour = req.query.hour;
+  //var city = "Central & Western"
   var docClient = new AWS.DynamoDB.DocumentClient();
+  var now = moment(Date.now()).format("X");
 
   var table = "airquality";
-
   var params = {
-      TableName: table,
-      Key:{
-          "city": city,
-      }
+    TableName : table,
+    KeyConditionExpression : '#l = :location and #d between :t1 and :t2',  
+    ExpressionAttributeValues : {
+        ':location' : location,
+        ':t2' : parseInt(moment(Date.now()).format("X")),
+        ':t1' : parseInt(moment(Date.now()).format("X")) - hour*60*60
+    },
+    ExpressionAttributeNames: {"#l":"location", "#d":"date"}
   };
-  docClient.get(params, function(err, data) {
+  
+  docClient.query(params, function(err, data) {
     if (err) {
-        console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+        res.json({
+          message: "Unable to read item. Error JSON:" + JSON.stringify(err, null, 2),
+          error: err
+        });
+        //console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
     } else {
-        res.json({results:data, city: decodeURI(city)});
+        res.json({results:data});
         console.log("GetItem succeeded:", data);
     }
   });

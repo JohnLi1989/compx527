@@ -7,11 +7,20 @@
     </select>
     <span>Choose a city</span>
 
-    <select id="selCity" v-model="citySelected" @change="getDetail">
+    <select id="selCity" v-model="citySelected" @change="getLocation">
       <option style='display: none'></option>
       <option v-for="(city,index) in cities" :value ="city.city">{{city.city}}</option>
     </select>
 
+    <span>Choose a location</span>
+    <select id="selLocation" v-model="locationSelected" >
+      <option style='display: none'></option>
+      <option v-for="(location,index) in locations" :value ="location.location">{{location.location}}</option>
+    </select>
+
+    <form>
+      <label  v-for="(hour,index) in hours"><input v-model="checkedValue"  type="radio" :value="hour.hour"/>{{hour.value}}</label>
+    </form>
 
     <table width="90%" class="table4_1" v-show="show">
       <caption>
@@ -19,24 +28,24 @@
       </caption>
       <thead>
           <tr>
-              <th>Location</th>
-              <!-- <th>CO</th>
-              <th>NO2</th>
-              <th>O3</th>
-              <th>PM2.5</th>
-              <th>PM10</th>
-              <th>SO2</th> -->
-
+              <th>contaminant</th>
+              <th>value</th>
+              <th>unit</th>
+              <th>date</th>
           </tr>
       </thead>
-      <tr v-for="(location, index) in locations">
+      <tr v-for="(detail, index) in details">
           <td>
-              {{location.location}}
+              {{detail.parameter.toUpperCase()}}
           </td>
-          <td v-for="(measurement, index) in location.measurements">
-            {{measurement.parameter.toUpperCase()}} {{measurement.value}} {{measurement.unit}}
-            <br />
-            {{measurement.lastUpdated}}
+          <td>
+              {{detail.value}}
+          </td>
+          <td>
+              {{detail.unit}}
+          </td>
+          <td>
+              {{detail.date}}
           </td>
       </tr>
 
@@ -56,9 +65,24 @@ export default {
             locations: [],
             countrySelected: "",
             citySelected:"",
+            locationSelected:"",
+            details: [],
             show: false,
+            hours:[
+              {hour:1, value: "1 hour"},
+              {hour:12, value: "12 hours"},
+              {hour:24, value: "24 hours"},
+              {hour:24*7, value: "1 week"},
+              {hour:24*7*28, value:"4 weeks"}
+            ],
+            checkedValue: "",
           }
-		  	},
+        },
+        watch: {
+          checkedValue: function(){
+            this.getDetail()
+          }
+        },
 		  	components:{
 
 		  	},
@@ -79,19 +103,29 @@ export default {
               this.cities = cities;
             });
           },
-          getDetail(){
+          getLocation(){
             let city = this.citySelected;
-            axios.get('/detail?city='+city).then((result)=>{
-              let locations = result.data.results;
-              for(let i of locations){
-                for(let j of i.measurements){
-                  j.lastUpdated = this.dateFormatter(j.lastUpdated)
-                }
-                //i.measurements = this.setArr(i.measurements);
-                //i.measurements = i.measurements.sort(this.sortArray("parameter"));
+            axios.get('/location?city='+city).then((result)=>{
+              let locations = result.data.locations;
+              this.locations = locations;
+            });
+          },
+          getDetail(){
+            let location = this.locationSelected;
+            let hour = this.checkedValue;
+            axios.get('/detail?location='+location+'&hour='+hour).then((result)=>{
+              // for(let i of locations){
+              //   for(let j of i.measurements){
+              //     j.lastUpdated = this.dateFormatter(j.lastUpdated)
+              //   }
+              //   //i.measurements = this.setArr(i.measurements);
+              //   //i.measurements = i.measurements.sort(this.sortArray("parameter"));
+              // }
+              this.details = result.data.results.Items;
+              for(let i of this.details){
+                i.date = this.dateFormatter(moment.unix(i.date))
               }
               this.show = true;
-              this.locations = locations;
             });
           },
           sortArray(field){
