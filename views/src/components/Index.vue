@@ -91,21 +91,21 @@ export default {
         },
 		  	methods: {
           getCountry(){
-            axios.get('/country').then((result)=>{
+            axios.get('/api/country').then((result)=>{
               let countries = result.data.countries;
               this.countries = countries;
             });
           },
           getCity(){
             let country = this.countrySelected;
-            axios.get('/city?country='+country).then((result)=>{
+            axios.get('/api/city?country='+country).then((result)=>{
               let cities = result.data.cities;
               this.cities = cities;
             });
           },
           getLocation(){
             let city = this.citySelected;
-            axios.get('/location?city='+city).then((result)=>{
+            axios.get('/api/location?city='+city).then((result)=>{
               let locations = result.data.locations;
               this.locations = locations;
             });
@@ -113,7 +113,7 @@ export default {
           getDetail(){
             let location = this.locationSelected;
             let hour = this.checkedValue;
-            axios.get('/detail?location='+location+'&hour='+hour).then((result)=>{
+            axios.get('/api/detail?location='+location+'&hour='+hour).then((result)=>{
               // for(let i of locations){
               //   for(let j of i.measurements){
               //     j.lastUpdated = this.dateFormatter(j.lastUpdated)
