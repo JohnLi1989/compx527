@@ -28,105 +28,107 @@
 // Load the AWS SDK for Node.js
 var AWS = require('aws-sdk');
 var moment = require('moment');
-// Set the region 
-AWS.config.update({
-    region: 'us-east-1',
-    //endpoint: "https://dynamodb.us-east-1.amazonaws.com"
+
+var schedule = require('node-schedule');
+ 
+
+var rule = new schedule.RecurrenceRule(); 
+rule.minute = [0,5,10,15,20,25,30,35,40,45,50,55];
+
+var donelist = [];
+var j = schedule.scheduleJob(rule, function(){  
+
+  console.log("schedual task start");
+
+  console.log(donelist)
+  // Set the region 
+  AWS.config.update({
+      region: 'us-east-1',
+      endpoint: undefined
+    });
+
+  //console.log(AWS.config)
+
+
+  var docClient = new AWS.DynamoDB.DocumentClient();
+  var table = "airquality";
+  var s3 = new AWS.S3();
+
+
+  var today = moment(new Date()).format("YYYY-MM-DD");
+
+  console.log(today)
+
+  var listparams = {
+    Bucket : 'openaq-fetches',
+    Prefix: 'realtime/'+today,
+  }
+
+  s3.listObjects(listparams, function(err, data) {
+    if (err){
+      console.log(err, err.stack); // an error occurred
+    } else if(data.Contents.length == 0){
+      console.log("no data right now");
+    } else {
+      let newone = data.Contents[data.Contents.length-1];
+      console.log(newone.Key)
+      let bucketParams = {
+        Bucket : 'openaq-fetches',
+        Key: newone.Key
+      };
+      var newnumber = parseInt(newone.Key.split('.')[0].split('/')[2])
+
+      if(newnumber <= donelist[donelist.length-1]){
+        console.log("already done", newnumber)
+      } else {
+        
+        AWS.config.update({
+          region: 'us-east-1',
+          endpoint: "https://dynamodb.us-east-1.amazonaws.com"
+        });
+
+        s3.getObject(bucketParams, function(err, data) {
+          if (err) {
+            console.log("Error", err);
+          } else {
+            donelist.push(newnumber)
+            
+            var datalist = JSON.parse(JSON.stringify(data.Body.toString())).split(/\n/);
+
+            console.log(datalist.length);
+
+            for(let i=0; i<datalist.length-1; i++){
+              //console.log(i)
+              var jsondata = JSON.parse(datalist[i]);
+              jsondata.date = parseInt(moment(jsondata.date.local).format("X"));
+              var params = {
+                  TableName:table,
+                  Item: jsondata
+              };
+              //console.log(i,params)
+
+              console.log("Adding a new item...");
+              docClient.put(params, function(err, data) {
+                  if (err) {
+                      console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+                  } else {
+                      console.log("Added item success");
+                  }
+              });
+              
+            }
+            
+          }
+        });    
+      }
+    }    
   });
 
-// Create S3 service object
-s3 = new AWS.S3();
 
-// Create the parameters for calling listObjects
-var bucketParams = {
-  Bucket : 'openaq-fetches',
-  Key: 'realtime/2019-08-25/1566723665.ndjson'
-};
+});
 
-var docClient = new AWS.DynamoDB.DocumentClient();
 //var dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
-var table = "airquality";
 
 
 // Call S3 to obtain a list of the objects in the bucket
-s3.getObject(bucketParams, function(err, data) {
-  if (err) {
-    console.log("Error", err);
-  } else {
-    AWS.config.update({
-      region: 'us-east-1',
-      endpoint: "https://dynamodb.us-east-1.amazonaws.com"
-    });
-    var datalist = JSON.parse(JSON.stringify(data.Body.toString())).split(/\n/);
 
-    for(let i=0; i<datalist.length-1; i++){
-      //console.log(i)
-      var jsondata = JSON.parse(datalist[i]);
-      jsondata.date = parseInt(moment(jsondata.date.local).format("X"));
-      var params = {
-          TableName:table,
-          Item: jsondata
-      };
-      console.log("Adding a new item...");
-      docClient.put(params, function(err, data) {
-          if (err) {
-              console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-          } else {
-              console.log("Added item success");
-          }
-      });
-      
-    }
-
-    
-    
-  }
-});
-
-
-// var AWS = require("aws-sdk");
-
-// AWS.config.update({
-//   region: "us-east-1",
-//   endpoint: "https://dynamodb.us-east-1.amazonaws.com"
-// });
-
-// var docClient = new AWS.DynamoDB.DocumentClient();
-
-// var table = "airquality";
-
-// var data = {"date":{"utc":"2019-08-20T02:00:00.000Z","local":"2019-08-20T10:00:00+08:00"},"parameter":"no2","value":35.8,"unit":"µg/m³","averagingPeriod":{"value":1,"unit":"hours"},"location":"Central/Western","city":"Central & Western","country":"HK","coordinates":{"longitude":114.14444444444445,"latitude":22.285},"attribution":[{"name":"Environmental Protection Department","url":"https://data.gov.hk/en-data/dataset/hk-epd-airteam-past24hr-pc-of-individual-air-quality-monitoring-stations"}],"sourceName":"Hong Kong","sourceType":"government","mobile":false}
-
-// var params = {
-//     TableName:table,
-//     Item: data
-// };
-
-// console.log("Adding a new item...");
-// docClient.put(params, function(err, data) {
-//     if (err) {
-//         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-//     } else {
-//         console.log("Added item:", JSON.stringify(data, null, 2));
-//     }
-// });
-
-// { date:
-//   { utc: '2019-08-25T08:30:00.000Z',
-//     local: '2019-08-25T14:00:00+05:30' },
-//  parameter: 'o3',
-//  value: 27.28,
-//  unit: 'µg/m³',
-//  averagingPeriod: { unit: 'hours', value: 0.25 },
-//  location: 'Rabindra Sarobar, Kolkata - WBPCB',
-//  city: 'Kolkata',
-//  country: 'IN',
-//  coordinates: { latitude: 22.51106, longitude: 88.35142 },
-//  attribution:
-//   [ { name: 'Central Pollution Control Board',
-//       url:
-//        'https://app.cpcbccr.com/ccr/#/caaqm-dashboard-all/caaqm-landing' } ],
-//  sourceName: 'caaqm',
-//  sourceType: 'government',
-//  mobile: false }
