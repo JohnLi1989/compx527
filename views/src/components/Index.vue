@@ -13,13 +13,13 @@
     </select>
 
     <span>Choose a location</span>
-    <select id="selLocation" v-model="locationSelected" >
+    <select id="selLocation" v-model="locationSelected" @change="getDetail">
       <option style='display: none'></option>
       <option v-for="(location,index) in locations" :value ="location.location">{{location.location}}</option>
     </select>
 
     <form>
-      <label  v-for="(hour,index) in hours"><input v-model="checkedValue"  type="radio" :value="hour.hour"/>{{hour.value}}</label>
+      <label  v-for="(hour,index) in hours"><input v-model="checkedValue" :name="hour.hour" :id="hour.hour" type="radio" :value="hour.hour"/>{{hour.value}}</label>
     </form>
 
     <table width="90%" class="table4_1" v-show="show">
@@ -75,7 +75,7 @@ export default {
               {hour:24*7, value: "1 week"},
               {hour:24*7*28, value:"4 weeks"}
             ],
-            checkedValue: "",
+            checkedValue: 1,
           }
         },
         watch: {

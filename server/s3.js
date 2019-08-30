@@ -114,6 +114,7 @@ var j = schedule.scheduleJob(rule, function(){
                   } else {
                       console.log("Added item success");
                   }
+                  sleep(1000);
               });
               
             }
@@ -132,3 +133,12 @@ var j = schedule.scheduleJob(rule, function(){
 
 // Call S3 to obtain a list of the objects in the bucket
 
+function sleep(numberMillis) {
+  var now = new Date();
+  var exitTime = now.getTime() + numberMillis;
+  while (true) {
+      now = new Date();
+      if (now.getTime() > exitTime)
+        return;
+  }
+}

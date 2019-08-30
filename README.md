@@ -13,6 +13,5 @@ npm i
 
 启动服务器
 
-node bin/www
-
-或者用pm2, forever 等启动
+npm intall forever -g
+forever start bin/www
