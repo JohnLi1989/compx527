@@ -1,26 +1,26 @@
 <template>
   <div>
-    <span>Choose a country</span>
-    <select id="selCountry" v-model="countrySelected" @change="getCity">
-            <option style='display: none'></option>
-            <option v-for="(country,index) in countries" :value ="country.code">{{country.name}}</option>
-    </select>
-    <span>Choose a city</span>
+    <el-select id="selCountry" v-model="countrySelected" @change="getCity" placeholder="Choose a country">
+            <!-- <el-option style='display: none'></el-option> -->
+            <el-option v-for="(country,index) in countries" :key="country.code" :value ="country.code">{{country.name}}</el-option>
+    </el-select>
 
-    <select id="selCity" v-model="citySelected" @change="getLocation">
-      <option style='display: none'></option>
-      <option v-for="(city,index) in cities" :value ="city.city">{{city.city}}</option>
-    </select>
+    <el-select id="selCity" v-model="citySelected" @change="getLocation" placeholder="Choose a city">
+      <!-- <option style='display: none'></option> -->
+      <el-option v-for="(city,index) in cities" :key="city.city" :value ="city.city">{{city.city}}</el-option>
+    </el-select>
 
-    <span>Choose a location</span>
-    <select id="selLocation" v-model="locationSelected" @change="getDetail">
-      <option style='display: none'></option>
-      <option v-for="(location,index) in locations" :value ="location.location">{{location.location}}</option>
-    </select>
+    <el-select id="selLocation" v-model="locationSelected" @change="getDetail" placeholder="Choose a location">
+      <!-- <option style='display: none'></option> -->
+      <el-option v-for="(location,index) in locations" :key="location.location" :value ="location.location">{{location.location}}</el-option>
+    </el-select>
 
-    <form>
-      <label  v-for="(hour,index) in hours"><input v-model="checkedValue" :name="hour.hour" :id="hour.hour" type="radio" :value="hour.hour"/>{{hour.value}}</label>
-    </form>
+    <div style="margin-top: 20px">
+      <el-radio-group size="small" v-model="checkedValue">
+        <el-radio-button v-for="(hour,index) in hours" :label="hour.hour" :id="hour.hour">{{hour.value}}</el-radio-button>
+      <!-- <label  v-for="(hour,index) in hours"><input v-model="checkedValue" :name="hour.hour" :id="hour.hour" type="radio" :value="hour.hour"/>{{hour.value}}</label> -->
+      </el-radio-group>
+    </div>
 
     <table width="90%" class="table4_1" v-show="show">
       <caption>
@@ -69,13 +69,12 @@ export default {
             details: [],
             show: false,
             hours:[
-              {hour:1, value: "1 hour"},
               {hour:12, value: "12 hours"},
               {hour:24, value: "24 hours"},
               {hour:24*7, value: "1 week"},
               {hour:24*7*28, value:"4 weeks"}
             ],
-            checkedValue: 1,
+            checkedValue: 12,
           }
         },
         watch: {
