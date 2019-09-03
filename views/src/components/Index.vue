@@ -17,8 +17,7 @@
 
     <div style="margin-top: 20px">
       <el-radio-group size="small" v-model="checkedValue">
-        <el-radio-button v-for="(hour,index) in hours" :label="hour.hour" :id="hour.hour">{{hour.value}}</el-radio-button>
-      <!-- <label  v-for="(hour,index) in hours"><input v-model="checkedValue" :name="hour.hour" :id="hour.hour" type="radio" :value="hour.hour"/>{{hour.value}}</label> -->
+        <el-radio-button v-for="(hour, index) in hours" :key="hour.hour" :label="hour.hour" :id="hour.hour">{{hour.value}}</el-radio-button>
       </el-radio-group>
     </div>
 
@@ -50,12 +49,16 @@
       </tr>
 
     </table>
+    <canvas id="myChart2" width="400px" height="400px" style="display: block;height: 600px;width: 600px;"></canvas>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
 import moment from 'moment'
+import Chart from 'chart.js'
+import { Line } from 'vue-chartjs'
+
 export default {
 			name: "Index",
 		  	data(){
@@ -75,6 +78,10 @@ export default {
               {hour:24*7*28, value:"4 weeks"}
             ],
             checkedValue: 12,
+            showchart: true,
+            labels: [],
+            chartdata: [],
+            //options: []
           }
         },
         watch: {
@@ -84,11 +91,54 @@ export default {
         },
 		  	components:{
 
-		  	},
+        },
+        // extends: Line,
+        // props: {
+        //   chartData: {
+        //     type: Object,
+        //     default: null
+        //   },
+        //   options: {
+        //     type: Object,
+        //     default: null
+        //   }
+        // },
 		  	mounted() {
-			  	this.getCountry();
+          this.getCountry();
+          //this.renderChart(this.chartdata, this.options)
+          //this.Chart();
+
+
         },
 		  	methods: {
+          Chart() {
+            var ctx2 = document.getElementById("myChart2");
+            var myChart2 = new Chart(ctx2, {
+                type: "line",
+                data: {
+                    labels: this.labels,
+                    datasets: this.chartdata
+                    // [
+                    //     {
+                    //         label: "test1",
+                    //         backgroundColor: "rgba(225,10,10,0.3)",
+                    //         borderColor: "rgba(225,103,110,1)",
+                    //         borderWidth: 1,
+                    //         pointStrokeColor: "#fff",
+                    //         pointStyle: "crossRot",
+                    //         data: [65, 59, 0, 81, 56, 10, 40, 22, 32, 54, 10, 30],
+                    //         cubicInterpolationMode: "monotone",
+                    //         spanGaps: "false",
+                    //         fill: "false"
+                    //     }
+                    // ]
+                },
+                options: {
+
+                }
+
+            });
+          },
           getCountry(){
             axios.get('/api/country').then((result)=>{
               let countries = result.data.countries;
@@ -96,6 +146,9 @@ export default {
             });
           },
           getCity(){
+            this.show = false,
+            this.citySelected = "";
+            this.locationSelected = "";
             let country = this.countrySelected;
             axios.get('/api/city?country='+country).then((result)=>{
               let cities = result.data.cities;
@@ -103,6 +156,8 @@ export default {
             });
           },
           getLocation(){
+            this.show = false,
+            this.locationSelected = "";
             let city = this.citySelected;
             axios.get('/api/location?city='+city).then((result)=>{
               let locations = result.data.locations;
@@ -121,11 +176,34 @@ export default {
               //   //i.measurements = i.measurements.sort(this.sortArray("parameter"));
               // }
               this.details = result.data.results.Items;
-              for(let i of this.details){
-                i.date = this.dateFormatter(moment.unix(i.date))
+              if(this.details.length > 0){
+                this.labels = [],
+                this.chartdata = [],
+                this.chartdata.push({
+                              label: this.details[0].parameter,
+                              backgroundColor: "rgba(225,10,10,0.3)",
+                              borderColor: "rgba(225,103,110,1)",
+                              borderWidth: 1,
+                              pointStrokeColor: "#fff",
+                              pointStyle: "crossRot",
+                              data: [],
+                              cubicInterpolationMode: "monotone",
+                              spanGaps: "false",
+                              fill: "false"
+                          })
+                for(let i of this.details){
+                  i.date = this.dateFormatter(moment.unix(i.date))
+                  if(i.parameter==this.chartdata[0].label){
+                    this.labels.push(i.date)
+                    this.chartdata[0].data.push(i.value)
+                  }
+                }
+
+                this.Chart();
               }
-              this.show = true;
             });
+
+            this.show = true;
           },
           sortArray(field){
             return function(a,b) {
