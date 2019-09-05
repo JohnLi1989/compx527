@@ -21,7 +21,11 @@
       </el-radio-group>
     </div>
 
-    <table width="90%" class="table4_1" v-show="show">
+
+    <div style="width:60%; heigh:60%;margin:20px auto">
+      <canvas id="myChart2"></canvas>
+    </div>
+    <table width="100%" class="table4_1" v-show="show">
       <caption>
           <h2>Air Quality</h2>
       </caption>
@@ -49,9 +53,6 @@
       </tr>
 
     </table>
-    <div style="width:50%; heigh:50%;margin:0 auto">
-      <canvas id="myChart2"></canvas>
-    </div>
   </div>
 </template>
 
@@ -225,8 +226,8 @@ export default {
 <style scoped>
 .table4_1 table {
 	width:100%;
-	margin:15px 0;
 	border:0;
+  margin:10 5%;
 }
 .table4_1 th {
 	background-color:#93DAFF;
