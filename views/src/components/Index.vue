@@ -49,7 +49,9 @@
       </tr>
 
     </table>
-    <canvas id="myChart2" width="400px" height="400px" style="display: block;height: 600px;width: 600px;"></canvas>
+    <div style="width:50%; heigh:50%;margin:0 auto">
+      <canvas id="myChart2"></canvas>
+    </div>
   </div>
 </template>
 
@@ -248,5 +250,9 @@ export default {
 }
 .table4_1 tr:nth-child(even){
 	background-color:#fdfdfd;
+}
+#myChart2{
+  width: 400px;
+  height: 400px;
 }
 </style>
